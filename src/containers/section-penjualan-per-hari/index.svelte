@@ -1,4 +1,4 @@
-<script>
+<!-- <script>
   import Chart from "chart.js";
 
   let barChart;
@@ -97,3 +97,4 @@
     </div>
   </div>
 </section>
+ -->
