@@ -1,0 +1,16 @@
+.section.menu {
+    a:visited, a:link {
+        color: #363636;
+    }
+    .tile.is-child {
+        display: block;
+    }
+    svg {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1.5rem;
+        height: 5rem;
+        width: 5rem;
+    }
+}
