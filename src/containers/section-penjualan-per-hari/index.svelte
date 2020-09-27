@@ -1,100 +1,167 @@
-<!-- <script>
+<script>
   import Chart from "chart.js";
+  import html2pdf from "html2pdf.js";
+  import { onMount } from "svelte";
 
-  let barChart;
-  let pieChart;
+  let grafik;
+  let myChart;
 
   let date = "2020-09-14";
+  let dateOutput = "2020-09-14";
 
-  let arrayOutput = [];
-  let objectOutput = {
-    id_rokok: "",
-    nama_rokok: "",
-    jumlah: "",
-    harga_rokok: ""
-  };
+  let listPenjualan = [];
+  let totalPenjualan = 0;
+  let arrayLabels = [];
+  let arrayData = [];
 
-  let test 
+  onMount(() => {
+    myChart = new Chart(grafik,{});
+    updateData();
+  });
 
-  const fetchData = (async () => {
-    const response = await fetch(
-      "http://localhost/rest-api-rokok/api/penjualanperhari?date=" + date,
-      {
-        method: "GET"
-      }
-    );
-    let responseJson = await response.json();
-    console.log(responseJson);
-    for (let i=0; i<responseJson.data.length; i++){
-      for (let j=0; i<responseJson.data[i].length; j++){
-        let flag = false;
-        // Cek di Array Output
-        // for (let k=0; k<arrayOutput.length; k++){
-        //   if (arrayOutput[k].id_rokok == responseJson.data[i][j].id_rokok){
-        //     arrayOutput[k].jumlah += responseJson.data[i][j].jumlah;
-        //     flag = true;
-        //   }; 
-        // };
-        console.log(responseJson);
-        console.log(responseJson.data);
-        console.log(responseJson.data[i]);
-        console.log(responseJson.data[i][j]);
-        console.log(responseJson.data[i][j].id_rokok);
-        // if (flag === false) {
-        //   objectOutput.id_rokok = responseJson.data[i][j].id_rokok;
-        //   objectOutput.nama_rokok = responseJson.data[i][j].nama_rokok;
-        //   objectOutput.jumlah = responseJson.data[i][j].jumlah;
-        //   objectOutput.harga_rokok = responseJson.data[i][j].harga_rokok;
-        //   arrayOutput.push(objectOutput);
-        // };
+  function updateData() {
+    myChart.destroy();
+    let fetchData = (async () => {
+      let response = await fetch(
+        "http://localhost/rest-api-rokok/api/penjualanperhari?date=" + date,
+        {
+          method: "GET"
+        }
+        );
+      let responseJson = await response.json();
+      let array1 = await responseJson.data;
+      let counter = 0;
+      totalPenjualan = 0;
+
+      for (let i=0; i<array1.length; i++) {
+        for (let j=0; j<array1[i].length; j++) {
+          listPenjualan[counter] = array1[i][j];
+          totalPenjualan = totalPenjualan + parseInt(listPenjualan[counter].harga_rokok * listPenjualan[counter].jumlah);
+          arrayData[counter] = listPenjualan[counter].jumlah;
+          arrayLabels[counter] = listPenjualan[counter].nama_rokok;
+          counter = counter + 1;
+        };
       };
+
+      myChart = new Chart(grafik, {
+        type: "bar",
+        data: {
+          labels: arrayLabels,
+          datasets: [
+          {
+            label: "Jumlah Rokok Terjual",
+            data: arrayData,
+            borderWidth: 1
+          }
+          ]
+        },
+        options: {
+          maintainAspectRatio: true,
+          scales: {
+            yAxes: [
+            {
+              ticks: {
+                beginAtZero: true,
+                stepSize: 5
+              }
+            }
+            ]
+          }
+        }
+      });
+    })();
+  };
+  
+  function printHandler() {
+    myChart.resize();
+    myChart.update();
+    let opt = {
+      margin : 0.15,
+      filename: 'Laporan Penjualan.pdf',
+      image : {
+        type: 'jpeg',
+        quality: 0.8
+      },
+      html2canvas: { scale: 1.5 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
     };
-  })();
+
+    html2pdf().set(opt).from(document.body).save();
+  }
+
 </script>
 
 <section class="section list-rokok">
   <div class="container">
-    <h1 class="title is-1">Penjualan Per Hari</h1>
-    <div class="tile is-ancestor">
-      <div class="tile is-vertical">
-        <div class="tile is-12">
-          <div class="tile is-parent">
-            <div class="tile is-child box">
-              <p class="title is-5">Pie Chart</p>
-              <canvas bind:this={pieChart} />
-            </div>
-          </div>
-          <div class="tile is-6 is-vertical is-parent">
-            <div class="tile is-child box">
-              <p class="title is-5">Select Date</p>
-              <div class="select">
-                <select bind:value={date}>
-                  <option>2020-09-14</option>
-                  <option>2020-09-15</option>
-                  <option>2020-09-16</option>
-                  <option>2020-09-17</option>
-                  <option>2020-09-18</option>
-                  <option>2020-09-19</option>
-                  <option>2020-09-20</option>
-                  <option>2020-09-21</option>
-                </select>
-              </div>
-            </div>
-            <div class="tile is-child box">
-              <p class="title is-5">Tabel Penjualan {date}</p>
 
-            </div>
-          </div>
+    <div class="columns">
+      <div class="column is-10">
+        <p class="title is-5">Select Date</p>
+        <div class="select">
+          <select bind:value={date} on:change={updateData}>
+            <option>2020-09-14</option>
+            <option>2020-09-15</option>
+            <option>2020-09-16</option>
+            <option>2020-09-17</option>
+            <option>2020-09-18</option>
+            <option>2020-09-19</option>
+            <option>2020-09-20</option>
+            <option>2020-09-21</option>
+          </select>
         </div>
-        <div class="tile is-12">
-          <div class="tile is-parent">
-            <div class="tile is-child box">
-              <canvas bind:this={barChart} />
-            </div>
-          </div>
+      </div>
+      <div class="column">
+        <button class="button is-link is-fullwidth is-outlined" on:click={printHandler}>Get PDF</button>
+      </div>
+    </div>
+
+    <div class="columns">
+      <div class="column">
+        <h1 class="title is-3">Penjualan Tanggal {date}</h1>
+      </div>
+    </div>
+
+    <div class="tile is-ancestor">
+      <div class="tile is-parent">
+        <div class="tile is-child box" style="position: relative;">
+          <canvas bind:this={grafik} />
+        </div>
+      </div>
+      <div class="tile is-parent">
+        <div class="tile is-child box">
+
+          <table class="table is-fullwidth is-striped is-hoverable is-mobile">
+            <thead>
+              <tr>
+                <th>Deskripsi</th>
+                <th>Qty</th>
+                <th>Harga</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each listPenjualan as penjualan}
+              <tr>
+                <td>{penjualan.nama_rokok}</td>
+                <td>{penjualan.jumlah}</td>
+                <td>Rp. {penjualan.harga_rokok},-</td>
+                <td>Rp. {penjualan.harga_rokok * penjualan.jumlah},-</td>
+              </tr>
+              {/each}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th></th>
+                <th></th>
+                <th>Total</th>
+                <th>Rp. {totalPenjualan},-</th>
+              </tr>
+            </tfoot>
+          </table>
+
         </div>
       </div>
     </div>
-  </div>
+
+   </div>
 </section>
- -->
